@@ -10,14 +10,13 @@ class Node {
     this.tags = { isNew: true, isCurrent: false, isVisited: false };
     this.leftLine = { isCurrent: false, isVisited: false };
     this.rightLine = { isCurrent: false, isVisited: false };
-    this.log = [];
   }
 }
 
 function deepClone(obj) {
   if (obj === null || typeof obj !== 'object') return obj;
-  var props = Object.getOwnPropertyDescriptors(obj);
-  for (var prop in props) {
+  let props = Object.getOwnPropertyDescriptors(obj);
+  for (let prop in props) {
     props[prop].value = deepClone(props[prop].value);
   }
   return Object.create(Object.getPrototypeOf(obj), props);
@@ -30,6 +29,7 @@ class BST {
     this.width = width;
     this.height = height;
     this.snapshots = [this.cloneRoot()];
+    this.log = [];
     this.calculate();
   }
 
@@ -43,27 +43,33 @@ class BST {
   _insert(data, root) {
     if (data > root.data) {
       this.setRightAnimation(root);
+      this.log.push(`data: ${data} > node: ${root.data}, идем вправо`);
       if (root.right === null) {
-        root.rightLine.isCurrent = true;
         root.right = new Node(data);
         this.calculate();
+        root.right.tags.isCurrent = true;
         this.snapshots.push(this.cloneRoot());
-        root.rightLine.isCurrent = false;
+        this.log.push(`найдено место для вставки data: ${data}`);
         root.rightLine.isVisited = true;
         this.snapshots.push(this.cloneRoot());
+        this.log.push(`Вставлено data: ${data}`);
         return;
       }
       return this._insert(data, root.right);
     } else {
       this.setLeftAnimation(root);
+      this.log.push(`data: ${data} > node: ${root.data}, идем влево`);
       if (root.left === null) {
-        root.leftLine.isCurrent = true;
         root.left = new Node(data);
         this.calculate();
+        root.left.tags.isCurrent = true;
+        root.leftLine.isCurrent = true;
         this.snapshots.push(this.cloneRoot());
-        root.leftLine.isCurrent = false;
+        this.log.push(`найдено место для вставки data: ${data}`);
         root.leftLine.isVisited = true;
+        root.leftLine.isCurrent = false;
         this.snapshots.push(this.cloneRoot());
+        this.log.push(`Вставлено data: ${data}`);
         return;
       }
       return this._insert(data, root.left);
@@ -75,6 +81,7 @@ class BST {
     this.root = this._remove(data, this.root);
     this.calculate();
     this.snapshots.push(this.cloneRoot());
+    this.log.push(`Удалено значение data: ${data}`);
     this.calculate();
   }
 
@@ -82,9 +89,11 @@ class BST {
     if (root) {
       if (data < root.data) {
         this.setLeftAnimation(root);
+        this.log.push(`${data} < ${root.data}, идем влево`);
         root.left = this._remove(data, root.left);
       } else if (data > root.data) {
         this.setRightAnimation(root);
+        this.log.push(`${data} > ${root.data}, идем вправо`);
         root.right = this._remove(data, root.right);
       } else if (root.left && root.right) {
         root = Object.assign(Object.create(Node), root);
@@ -95,13 +104,17 @@ class BST {
         root.lastX = minNode.lastX;
         root.lastY = minNode.lastY;
         this.setRightAnimation(root);
+        this.log.push(
+          `Меняем найденное значение data: ${data}, на его замену node: ${root.data}`
+        );
         root.right = this._remove(root.data, root.right);
         this.calculate();
       } else {
-        return (root = root.left || root.right);
+        root = root.left || root.right;
       }
+      return root;
     }
-    return root;
+    this.log.push(`${data} не найдено в дереве`);
   }
 
   findMinNode(root) {
@@ -169,6 +182,7 @@ class BST {
       node.leftLine = { isCurrent: false, isVisited: false };
     }
     this.snapshots = [];
+    this.log = [];
   }
   setLeftAnimation(root) {
     root.tags.isCurrent = true;
@@ -187,6 +201,32 @@ class BST {
     root.tags.isVisited = true;
     root.rightLine.isCurrent = false;
     root.rightLine.isVisited = true;
+  }
+  search(data) {
+    this.clean();
+    this._search(this.root, data);
+  }
+  _search(root, data) {
+    if (!root) {
+      this.log.push(`data: ${data}, не найдено в дереве`);
+      this.snapshots.push(this.cloneRoot());
+      return;
+    }
+    if (data === root.data) {
+      this.log.push(`data: ${data} == node: ${root.data}, найдено в дереве`);
+      root.tags.isCurrent = true;
+      this.snapshots.push(this.cloneRoot());
+      return;
+    }
+    if (data < root.data) {
+      this.log.push(`data: ${data} < node: ${root.data}, идем влево`);
+      this.setLeftAnimation(root);
+      this._search(root.left, data);
+    } else {
+      this.log.push(`data: ${data} > node: ${root.data}, идем вправо`);
+      this.setRightAnimation(root);
+      this._search(root.right, data);
+    }
   }
 }
 export default BST;

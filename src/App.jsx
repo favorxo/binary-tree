@@ -33,7 +33,13 @@ const App = () => {
     animateSnapshots(copyGraph);
   };
 
-  const search = (find) => {};
+  const search = (find) => {
+    const copyGraph = graph.clone();
+    copyGraph.search(Number(find));
+    setCurrent(0);
+    setGraph(copyGraph);
+    animateSnapshots(copyGraph);
+  };
 
   const deleteNode = (nodeToDelete) => {
     const copyGraph = graph.clone();
@@ -44,7 +50,6 @@ const App = () => {
   };
 
   const animateSnapshots = (graph) => {
-    console.log(graph.snapshots);
     for (let i = 0; i < graph.snapshots.length; i++) {
       setTimeout(() => {
         setCurrent(i);
@@ -62,6 +67,27 @@ const App = () => {
         deleteNode={deleteNode}
       />
       <Graph graph={graph.snapshots[current]} />
+      <div>
+        {graph.log.slice(0, current + 1).map((e) => (
+          <h3>{e}</h3>
+        ))}
+      </div>
+      <div>
+        <button onClick={() => setCurrent((e) => (e === 0 ? 0 : e - 1))}>
+          назад
+        </button>
+        <button
+          onClick={() =>
+            setCurrent((e) =>
+              e === graph.snapshots.length - 1
+                ? graph.snapshots.length - 1
+                : e + 1
+            )
+          }
+        >
+          вперде
+        </button>
+      </div>
     </>
   );
 };

@@ -65,7 +65,7 @@ const GraphNode = ({ node }) => {
       {node.left && (
         <>
           <motion.line
-            transition={transition(0)}
+            transition={transition()}
             animate={leftLine}
             stroke={node.leftLine.isVisited ? 'rgb(255,150,0)' : '#050505'}
           />
@@ -85,7 +85,7 @@ const GraphNode = ({ node }) => {
       {node.right && (
         <>
           <motion.line
-            transition={transition(0)}
+            transition={transition()}
             animate={rightLine}
             stroke={node.rightLine.isVisited ? 'rgb(255,150,0)' : '#050505'}
           />

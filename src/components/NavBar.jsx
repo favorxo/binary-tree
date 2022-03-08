@@ -25,7 +25,7 @@ const NavBar = ({ graph, setGraph, searchNode, insertNode, deleteNode }) => {
         type="text"
         pattern="[0-9]*"
       />
-      <Button onClick={() => searchNode(search)}>Find</Button>
+      <Button onClick={() => searchNode(find)}>Find</Button>
       <Input
         value={find}
         onChange={(e) =>
