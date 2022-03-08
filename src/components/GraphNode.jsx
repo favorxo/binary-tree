@@ -1,109 +1,136 @@
 import { AnimatePresence, motion, useMotionValue } from 'framer-motion';
-const GraphNode = ({ node, width, height, offset }) => {
-  const x = useMotionValue(width / 2 + offset);
-  const y = useMotionValue(height);
+import { useEffect } from 'react';
+const GraphNode = ({ node }) => {
   const r = 14;
   const stroke = 2;
+  const speed = 0.3;
+  const leftLine = node.left && {
+    pathLength: [0, 1],
+    strokeWidth: 3,
+    x1: [node.lastX, node.currentX],
+    y1: [node.lastY, node.currentY],
+    x2: [node.left.lastX, node.left.currentX],
+    y2: [node.left.lastY, node.left.currentY],
+  };
+  const rightLine = node.right && {
+    pathLength: [0, 1],
+    strokeWidth: 3,
+    x1: [node.lastX, node.currentX],
+    y1: [node.lastY, node.currentY],
+    x2: [node.right.lastX, node.right.currentX],
+    y2: [node.right.lastY, node.right.currentY],
+  };
+  const borderCircle = {
+    fill:
+      node.tags.isCurrent || node.tags.isVisited ? 'rgb(255,150,0)' : '#050505',
+    cx: [node.lastX, node.currentX],
+    cy: [node.lastY, node.currentY],
+    opacity: 1,
+    scale: 1,
+  };
+  const innerCircle = {
+    fill: node.tags.isCurrent ? 'rgb(255,150,0)' : '#fff',
+    cx: [node.lastX, node.currentX],
+    cy: [node.lastY, node.currentY],
+    opacity: 1,
+    scale: 1,
+  };
+  const circleInitial = {
+    opacity: 0,
+    scale: 0,
+    cx: node.lastX,
+    cy: node.lastY,
+  };
+  const innerText = {
+    stroke: node.tags.isCurrent ? '#fff' : '#050505',
+    x: [node.lastX, node.currentX],
+    y: [node.lastY + 6, node.currentY + 6],
+    opacity: 1,
+    scale: 1,
+  };
+  const textInitial = {
+    opacity: 0,
+    scale: 0,
+    x: node.lastX,
+    y: node.lastY,
+  };
+  const transition = (delay) => ({
+    duration: speed,
+    ease: 'easeIn',
+    delay: delay,
+  });
+  
   return (
     <>
       {node.left && (
         <>
           <motion.line
-            x1={x}
-            y1={y}
-            x2={width / 4 + offset}
-            y2={height + 40}
-            // strokeWidth={3}
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { pathLength: 0, strokeWidth: 6 },
-              visible: {
-                pathLength: 1,
-                strokeWidth: 3,
-                stroke: 'rgb(0,0,0)',
-              },
-            }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+            transition={transition(0)}
+            animate={leftLine}
+            stroke={node.leftLine.isVisited ? 'rgb(255,150,0)' : '#050505'}
           />
-          <GraphNode
-            node={node.left}
-            width={width / 2}
-            height={height + 40}
-            offset={offset}
-          />
+          {node.leftLine.isCurrent && (
+            <motion.line
+              transition={transition(speed)}
+              animate={{
+                ...leftLine,
+                stroke: 'rgb(255,150,0)',
+                strokeWidth: 9,
+              }}
+            />
+          )}
+          <GraphNode node={node.left} />
         </>
       )}
       {node.right && (
         <>
           <motion.line
-            x1={x}
-            y1={y}
-            style={{ transition: 'all 100ms' }}
-            x2={offset + width / 2 + width / 4}
-            y2={height + 40}
-            stroke="black"
-            strokeWidth={3}
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { pathLength: 0 },
-              visible: { pathLength: 1 },
-            }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+            transition={transition(0)}
+            animate={rightLine}
+            stroke={node.rightLine.isVisited ? 'rgb(255,150,0)' : '#050505'}
           />
-          <GraphNode
-            node={node.right}
-            width={width / 2}
-            height={height + 40}
-            offset={offset + width / 2}
-          />
+          {node.rightLine.isCurrent && (
+            <motion.line
+              transition={transition(speed)}
+              animate={{
+                ...rightLine,
+                stroke: 'rgb(255,150,0)',
+                strokeWidth: 9,
+              }}
+            />
+          )}
+          <GraphNode node={node.right} />
         </>
       )}
-
-      <motion.g x={150}>
+      <g>
         <motion.circle // border circle
+          fill="black"
+          transition={transition()}
           r={r + 3}
-          cx={x}
-          cy={y}
           strokeWidth={stroke + 3}
           width={32}
           height={32}
-          transition={{ delay: 0.5, duration: 0.5, ease: 'easeIn' }}
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: 1,
-            fill: '#000',
-            // cx: [null, 250],
-            // cy: [null, 150],
-          }}
+          animate={borderCircle}
         />
         <motion.circle // inner circle
+          fill="#fff"
+          transition={transition()}
           r={r}
-          cx={x}
-          cy={y}
           strokeWidth={stroke}
           width={32}
           height={32}
-          fill="#fff"
-          transition={{ delay: 0.5, duration: 0.5, ease: 'easeIn' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, fill: '#fff' }}
+          animate={innerCircle}
         />
         <motion.text
-          x={x}
-          y={y.get() + 6}
           stroke="black"
+          transition={transition()}
           fontSize={16}
           textAnchor="middle"
-          fontWeight={500}
-          transition={{ delay: 0.5, duration: 0.5, ease: 'easeIn' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          animate={innerText}
         >
           {node.data}
         </motion.text>
-      </motion.g>
+      </g>
     </>
   );
 };
